@@ -1,0 +1,58 @@
+name:         cmd
+version:      '0.1.0.0'
+category:     System
+author:       phlummox
+copyright:    2018 phlummox
+homepage:     https://github.com/phlummox/hs-cmd#readme
+synopsis:     run subprocess, combining stdout and stderr
+maintainer:   phlummox2@gmail.com
+bug-reports:  https://github.com/phlummox/hs-cmd/issues
+description: 
+  Execute a command, redirect stderr into stdout, and return the combined
+  result (optionally, with a timeout). Irritatingly difficult to do using
+  the "process" library.
+stability:    experimental
+  
+
+extra-source-files:
+- README.md
+
+dependencies:
+- base >=4.7 && <5
+- async
+- deepseq
+- unix
+
+flags:
+  buildexe:
+    description: build the executable
+    manual: true
+    default: false
+
+library:
+  source-dirs: src
+  exposed-modules:
+  - Cmd
+
+# build with:
+#     stack build --flag cmd:buildExe
+executables:
+  try-cmd:
+    main: Main.hs
+    source-dirs: app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    # - -with-rtsopts=-N
+    when:
+    - condition: flag(buildexe)
+      then:
+        dependencies:
+        - async
+        - base
+        - cmd
+        - deepseq
+        - unix
+      else:
+        buildable: false
+
