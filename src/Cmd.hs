@@ -20,45 +20,18 @@ import System.Posix.Process     (createSession, executeFile, forkProcess,
 import System.Posix.IO          (closeFd, stdError, stdOutput, dupTo,
                                  createPipe, fdToHandle)
 import System.Posix.Signals     (signalProcessGroup, killProcess)
-import System.IO                (hGetContents, stdout, hFlush)
-import Control.Concurrent.Async (race)
-import Control.Exception        (onException, evaluate)
+import System.IO                (hGetContents, stdout, hFlush, hPutStrLn,
+                                  stderr)
+import Control.Concurrent.Async (race, waitEitherCatch, withAsync)
+import Control.Exception        (onException, evaluate, try, SomeException)
 import Control.Concurrent       (threadDelay)
 import System.Posix.Types       (ProcessID)
 import Control.DeepSeq          (force)
+import Data.Either              (either)
 
-{-
+tryAny :: IO a -> IO (Either SomeException a)
+tryAny = try
 
-foreign import ccall "cmd" cmd_c ::
-  Ptr CChar -> Ptr CString -> Ptr CSize -> Ptr CString -> IO CInt
---int cmd(const char* comm, char* const args[], size_t* outSz, constCharP* out);
-
-foreign import ccall "printf" printf_c ::
-  CString -> IO ()
-
-
-cmd_ :: String -> [String] -> IO String
-cmd_ command args = do
-  let args' = command : args
-  -- convert args' to an array of cstrings that can be passed.
-  args'' <- mapM newCString args'
-  resStr <- withCString command $ \command' -> 
-    withArrayLen0 (nullPtr :: CString) args'' $ \cnt args''' -> do
-      -- we allocate memory for a CSize and a Ptr
-      alloca $ \cSizePtr -> do
-        alloca $ \wordPtr -> do
-          let xxx = wordPtr :: Ptr WordPtr
-          throwErrnoIf (/= 0) "cmd" $
-            cmd_c command' args''' cSizePtr (castPtr wordPtr) 
-          -- now get size ...
-          size <- fromIntegral <$> peek cSizePtr
-          resPtr <- wordPtrToPtr <$> peek wordPtr
-          resStr <- peekCStringLen (resPtr, size)
-          return resStr
-  mapM_ free args''
-  return resStr
-
--}
 
 putStrLn' :: String -> IO ()
 putStrLn' str = do
@@ -66,6 +39,16 @@ putStrLn' str = do
   hFlush stdout
   putStr str'
   hFlush stdout
+
+-- wrapped executeFile that reports error
+executeFile'
+  :: FilePath -> Bool -> [String] -> Maybe [(String, String)] -> IO ()
+executeFile' cmd shell args env =
+  tryAny (executeFile cmd shell args env) >>=
+    either (\ex -> hPutStrLn stderr $ "error executing " ++ cmd ++ ", " ++
+                                   show ex)
+           (error "shouldn't be here")
+
 
 -- | @readCommand command args@: given a /command/ to run in a subprocess,
 --  and /args/ to pass to it --
@@ -86,8 +69,7 @@ readCommand command args = do
         -- child doesn't need these, so close
         closeFd readPipeEnd
         closeFd writePipeEnd
-        executeFile command True args Nothing -- `onException`
-          -- (putStrLn' "executeFile failed")
+        executeFile' command True args Nothing 
   !childPid <- forkProcess childTask
   -- in parent
   closeFd writePipeEnd
@@ -112,16 +94,46 @@ cmd command args = do
 rightToMaybe :: Either a b -> Maybe b
 rightToMaybe = either (const Nothing) Just
 
--- | same as command, but with a timeout
+race'
+  :: IO a
+     -> IO b
+     -> IO (Either (Either SomeException a) (Either SomeException b))
+race' left right =
+  withAsync left $ \a ->
+  withAsync right $ \b ->
+  waitEitherCatch a b
+
+type SEx = SomeException  
+
+-- | same as command, but with a timeout.
+-- Hard to get it do return nicely with timeout < about 10^5 microsecs 
 cmdTimeout :: FilePath -> [String] -> Int -> IO (Maybe String)
-cmdTimeout command args microSecs = do
-  (childPid, readerTask) <- readCommand command args
-  let
-      timerTask :: Int -> IO ()
-      timerTask n = do
-        threadDelay n
-        childGroupID <- getProcessGroupIDOf childPid
-        signalProcessGroup killProcess childGroupID
-  res <- race  (timerTask microSecs) readerTask
-  return $ rightToMaybe res
+cmdTimeout command args microSecs 
+  | microSecs <= 0  = return Nothing
+  | otherwise       = 
+      do
+        (childPid, readerTask) <- readCommand command args
+        let
+            timerTask :: Int -> IO ()
+            timerTask n = do
+              threadDelay n
+              !childGroupID <- getProcessGroupIDOf childPid
+              !_ <- signalProcessGroup killProcess childGroupID
+              return ()
+
+            timerTask' n =
+              timerTask n `onException` return ()
+
+        rightToMaybe . onlyA <$> race' (timerTask' microSecs) readerTask
+        -- let zzz = resX :: Maybe String
+
+        -- res <- tryAny (race  (timerTask' microSecs) readerTask) >>= \exOrRes ->
+        --           case exOrRes of
+        --             Left ex -> return $ Left ()
+        --             Right res -> return res
+        -- return $ rightToMaybe res
+      where
+        onlyA :: Either (Either SEx ()) (Either SEx a) -> Either () a
+        onlyA = either (const $ Left ()) (either (const $ Left ())  Right)
+
 

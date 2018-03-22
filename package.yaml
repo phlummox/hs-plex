@@ -56,3 +56,17 @@ executables:
       else:
         buildable: false
 
+
+tests:
+  cmd-test:
+    main: Spec.hs
+    source-dirs: test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - base
+    - cmd
+    - hspec
+    - QuickCheck
