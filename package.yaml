@@ -3,18 +3,18 @@ version:      '0.2.0.0'
 category:     System
 author:       phlummox
 copyright:    2018 phlummox
-license:      BSD2
+license:      PublicDomain
 license-file: LICENSE
-homepage:     https://github.com/phlummox/hs-plex#readme
+github:       phlummox/hs-plex
+#homepage:     https://github.com/phlummox/hs-plex#readme
 synopsis:     run a subprocess, combining stdout and stderr
 maintainer:   phlummox2@gmail.com
-bug-reports:  https://github.com/phlummox/hs-plex/issues
-description: 
-  Execute a command, redirect stderr into stdout, and return the combined
-  result (optionally, with a timeout). Irritatingly difficult to do using
-  the "process" library.
+#bug-reports:  https://github.com/phlummox/hs-plex/issues
+description: |
+  Execute a command, redirect stderr into stdout, and return 
+  the combined result (optionally, with a timeout). 
+  Irritatingly difficult to do using the "process" library.
 stability:    experimental
-  
 
 extra-source-files:
 - README.md
