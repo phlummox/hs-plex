@@ -21,6 +21,7 @@ dependencies:
 - base >=4.7 && <5
 - async
 - deepseq
+- bytestring
 - unix
 
 flags:
@@ -33,6 +34,8 @@ library:
   source-dirs: src
   exposed-modules:
   - Cmd
+  - Cmd.Internal
+  - Cmd.ByteString
 
 # build with:
 #     stack build --flag cmd:buildExe
@@ -56,10 +59,12 @@ executables:
       else:
         buildable: false
 
-
 tests:
   cmd-test:
     main: Spec.hs
+    other-modules: 
+    - CmdSpec
+    - Cmd.ByteStringSpec
     source-dirs: test
     ghc-options:
     - -threaded
@@ -70,3 +75,5 @@ tests:
     - cmd
     - hspec
     - QuickCheck
+
+
