@@ -1,16 +1,10 @@
-
-{-# LANGUAGE OverloadedStrings #-}
-
-module Cmd.ByteStringSpec (main, spec) where
+module System.PlexSpec (main, spec) where
 
 import Test.Hspec
 import Test.QuickCheck
 
-import Cmd.ByteString
-import qualified Data.ByteString.Lazy.Char8 as L
-import Data.ByteString.Lazy ( ByteString )
-
---import qualified Data.List as L
+import System.Plex
+import qualified Data.List as L
 import Data.Maybe
 
 -- `main` is here so that this module can be run from GHCi on its own.  It is
@@ -28,8 +22,6 @@ m `isJustAnd` f =
 spec :: Spec
 spec = do
   describe "cmd" $ do
-    it "does a THING" $
-      (1 + 1) `shouldBe` 2
     it "returns safely with no command" $ 
       cmd "" [] `shouldSatisfyM` ("error executing" `L.isPrefixOf`)
     it "returns safely with unexecutable command" $ 

@@ -1,4 +1,4 @@
-# hs-cmd
+# hs-plex
 
 Execute a command, redirect stderr into stdout, and return
 the combined result (optionally, with a timeout). Irritatingly difficult to do

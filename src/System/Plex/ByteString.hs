@@ -1,13 +1,9 @@
-
-module Cmd.ByteString
-
-where
+module System.Plex.ByteString where
 
 import qualified Data.ByteString.Lazy as L
-import Data.ByteString.Lazy ( ByteString )
-import Cmd.Internal hiding ( readCommand, cmd, cmdTimeout )
-import System.Posix.Types  (ProcessID)
-
+import Data.ByteString.Lazy (ByteString)
+import System.Plex.Internal hiding (cmd, cmdTimeout, readCommand)
+import System.Posix.Types (ProcessID)
 
 -- | @readCommand command args@: given a /command/ to run in a subprocess,
 --  and /args/ to pass to it --
@@ -16,12 +12,8 @@ import System.Posix.Types  (ProcessID)
 --
 -- if it doesn't start with a forward-slash, the /command/ is searched for
 -- in the current path.
-readCommand
-  :: FilePath
-     -> [String] -> IO (ProcessID, IO ByteString)
-readCommand command args = 
-  readCommand_ L.hGetContents command args
-
+readCommand :: FilePath -> [String] -> IO (ProcessID, IO ByteString)
+readCommand command args = readCommand_ L.hGetContents command args
 
 -- | @cmd command args@: execute /command/ with /args/; read combined stdout and stderr;
 -- return it as a string
@@ -36,8 +28,4 @@ cmd command args = do
 -- Hard to get it do return nicely with timeout < about 10^5 microsecs 
 cmdTimeout :: FilePath -> [String] -> Int -> IO (Maybe ByteString)
 cmdTimeout command args microSecs =
-  cmdTimeout_ L.hGetContents command args microSecs 
-
-
-
-
+  cmdTimeout_ L.hGetContents command args microSecs

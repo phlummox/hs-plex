@@ -1,10 +1,16 @@
-module CmdSpec (main, spec) where
+
+{-# LANGUAGE OverloadedStrings #-}
+
+module System.Plex.ByteStringSpec (main, spec) where
 
 import Test.Hspec
 import Test.QuickCheck
 
-import Cmd
-import qualified Data.List as L
+import System.Plex.ByteString
+import qualified Data.ByteString.Lazy.Char8 as L
+import Data.ByteString.Lazy ( ByteString )
+
+--import qualified Data.List as L
 import Data.Maybe
 
 -- `main` is here so that this module can be run from GHCi on its own.  It is

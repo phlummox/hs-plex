@@ -1,6 +1,6 @@
 module Main where
 
-import Cmd
+import System.Plex
 import System.Environment
 
 main :: IO ()

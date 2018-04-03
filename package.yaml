@@ -1,12 +1,14 @@
-name:         cmd
-version:      '0.1.0.0'
+name:         plex
+version:      '0.2.0.0'
 category:     System
 author:       phlummox
 copyright:    2018 phlummox
-homepage:     https://github.com/phlummox/hs-cmd#readme
-synopsis:     run subprocess, combining stdout and stderr
+license:      BSD2
+license-file: LICENSE
+homepage:     https://github.com/phlummox/hs-plex#readme
+synopsis:     run a subprocess, combining stdout and stderr
 maintainer:   phlummox2@gmail.com
-bug-reports:  https://github.com/phlummox/hs-cmd/issues
+bug-reports:  https://github.com/phlummox/hs-plex/issues
 description: 
   Execute a command, redirect stderr into stdout, and return the combined
   result (optionally, with a timeout). Irritatingly difficult to do using
@@ -32,15 +34,16 @@ flags:
 
 library:
   source-dirs: src
+  ghc-options: -Wall
   exposed-modules:
-  - Cmd
-  - Cmd.Internal
-  - Cmd.ByteString
+  - System.Plex
+  - System.Plex.Internal
+  - System.Plex.ByteString
 
 # build with:
-#     stack build --flag cmd:buildExe
+#     stack build --flag plex:buildExe
 executables:
-  try-cmd:
+  try-plex:
     main: Main.hs
     source-dirs: app
     ghc-options:
@@ -53,18 +56,19 @@ executables:
         dependencies:
         - async
         - base
-        - cmd
+        - plex
         - deepseq
         - unix
       else:
         buildable: false
 
 tests:
-  cmd-test:
+  plex-test:
     main: Spec.hs
+    ghc-options: -Wall
     other-modules: 
-    - CmdSpec
-    - Cmd.ByteStringSpec
+    - System.PlexSpec
+    - System.Plex.ByteStringSpec
     source-dirs: test
     ghc-options:
     - -threaded
@@ -72,7 +76,7 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - base
-    - cmd
+    - plex
     - hspec
     - QuickCheck
 
