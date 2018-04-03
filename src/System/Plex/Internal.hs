@@ -1,6 +1,20 @@
 {-# LANGUAGE BangPatterns #-}
 
-module System.Plex.Internal where
+{- |
+
+Generic versions of 'cmd', 'cmdTimeout' etc
+
+-}
+
+module System.Plex.Internal (
+    executeFile'
+  , readCommand
+  , readCommand_
+  , cmd
+  , cmd_
+  , cmdTimeout
+  , cmdTimeout_
+) where
 
 import Control.Concurrent.Async   (waitEitherCatch, withAsync)
 import Control.DeepSeq            (NFData, rnf )
@@ -16,11 +30,11 @@ import System.Posix.IO            (closeFd, stdError, stdOutput, dupTo,
 import System.Posix.Signals       (signalProcessGroup, killProcess)
 import System.Posix.Types         (ProcessID)
 
-
+-- | catch all exceptions
 tryAny :: IO a -> IO (Either SomeException a)
 tryAny = try
 
--- wrapped executeFile that reports error
+-- | wrapped executeFile that reports error
 executeFile' ::
      FilePath -> Bool -> [String] -> Maybe [(String, String)] -> IO ()
 executeFile' cmd shell args env =
